@@ -9,13 +9,15 @@ var UserSchema = new Schema({
   username: {type: String, required: true, index: {unique: true}},
 
   //Select:false is used when we do not want to query for password when searching a user.
-  password: {type: String, required: true, selec:; false}
+  password: {type: String, required: true, select: false}
 });
 
 UserSchema.pre('save',function(next){
 
+  var user = this;
+  
   if(!user.isModified('password'))
-  return next():
+  return next();
 
   bcrypt.hash(user.password,null,null,function(err,hash){
 

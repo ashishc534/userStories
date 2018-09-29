@@ -6,7 +6,10 @@ var app = express();
 //extended : true means, post request can also contain images, not just strings.
 var urlEncodedParser = bodyParser.urlencoded({extended: true});
 var config = require('./config.js');
+var api = require('./app/routes/api')(app,express);
 
+app.use(urlEncodedParser);
+app.use('/api',api);
 mongoose.connect(config.database,function(err){
   if(err)
   throw err;
