@@ -1,5 +1,6 @@
 var User = require('../models/user');
 var config = require('../../config');
+var Story = require('../models/story');
 
 //Used to create Authentication token.
 var secretKey = config.secretKey;
@@ -8,7 +9,7 @@ var jsonwebtoken = require('jsonwebtoken');
 function createToken(user){
 
   var token = jsonwebtoken.sign({
-    _id: user._id,
+    id: user._id,
     username: user.username,
     name: user.name
   },secretKey,{
@@ -83,5 +84,55 @@ module.exports = function(app,express){
     });
   });
 
+  api.use('/',function(req,res,next){
+
+    var token = req.body.token || req.params.token || req.headers['x-access-token'];
+
+    if(!token)
+    return res.status(403).send({message: "No Token Provided"});
+
+    jsonwebtoken.verify(token,secretKey,function(err,details){
+
+      if(err)
+      return res.status(403).send({message: "Invalid Token, Authentication Failed!"});
+
+      req.details = details;
+      next();
+    });
+  });
+
+  //Functions below this can only be accessed only if they can pass the middleware!!
+
+  //HTTP requests chaining. Use api.route('Your route') and Don't use ; and just chain methods using . ex:(.get() .post())
+
+  api.route('/')
+
+     api.post('/',function(req,res){
+
+       var story = new Story({
+
+         creator: req.details.id,
+         content: req.body.content
+       });
+
+       story.save(function(err){
+
+         if(err)
+         return res.send(err);
+
+         res.json({message: "New Story Created!"});
+       });
+     })
+
+    api.get('/',function(req,res){
+
+      Story.find({creator: req.details.id},function(err,stories){
+
+        if(err)
+        return res.send(err);
+
+        res.json(stories);
+      });
+    });
   return api;
 };
